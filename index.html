@@ -58,7 +58,7 @@
         <h1>Zetsubou Method</h1>
 
         <div class="section" id="encrypt-section">
-            <h2>Encrypt</h2>
+            <h2>Encrypt Section</h2>
             <label for="encrypt-input">Input Text:</label>
             <textarea id="encrypt-input" rows="3"></textarea>
 
@@ -69,13 +69,15 @@
 
             <label for="encrypt-result">Result:</label>
             <textarea id="encrypt-result" rows="3" readonly></textarea>
+            <button onclick="copyEncryptResult()">Copy</button>
             <p id="encrypt-error" class="error"></p>
         </div>
 
         <div class="section" id="decrypt-section">
-            <h2>Decrypt</h2>
+            <h2>Decrypt Section</h2>
             <label for="decrypt-input">Input Text:</label>
             <textarea id="decrypt-input" rows="3"></textarea>
+            <button onclick="pasteDecryptInput()">Paste</button>
 
             <label for="decrypt-key">Key:</label>
             <input type="text" id="decrypt-key">
@@ -157,6 +159,23 @@
             } catch (error) {
                 errorElement.textContent = 'Decryption failed. Please ensure the input and key are correct.';
             }
+        }
+
+        function copyEncryptResult() {
+            const result = document.getElementById('encrypt-result');
+            result.select();
+            result.setSelectionRange(0, 99999); // For mobile devices
+            navigator.clipboard.writeText(result.value)
+                .then(() => alert('Result copied to clipboard!'))
+                .catch(err => alert('Failed to copy result.'));
+        }
+
+        function pasteDecryptInput() {
+            navigator.clipboard.readText()
+                .then(text => {
+                    document.getElementById('decrypt-input').value = text;
+                })
+                .catch(err => alert('Failed to paste text.')); 
         }
     </script>
 </body>
