@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zetsubou Method</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007BFF;
+            color: white;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zetsubou Method</h1>
+
+        <div class="section" id="encrypt-section">
+            <h2>Encrypt</h2>
+            <label for="encrypt-input">Input Text:</label>
+            <textarea id="encrypt-input" rows="3"></textarea>
+
+            <label for="encrypt-key">Key:</label>
+            <input type="text" id="encrypt-key">
+
+            <button onclick="encryptText()">Encrypt</button>
+
+            <label for="encrypt-result">Result:</label>
+            <textarea id="encrypt-result" rows="3" readonly></textarea>
+            <p id="encrypt-error" class="error"></p>
+        </div>
+
+        <div class="section" id="decrypt-section">
+            <h2>Decrypt</h2>
+            <label for="decrypt-input">Input Text:</label>
+            <textarea id="decrypt-input" rows="3"></textarea>
+
+            <label for="decrypt-key">Key:</label>
+            <input type="text" id="decrypt-key">
+
+            <button onclick="decryptText()">Decrypt</button>
+
+            <label for="decrypt-result">Result:</label>
+            <textarea id="decrypt-result" rows="3" readonly></textarea>
+            <p id="decrypt-error" class="error"></p>
+        </div>
+    </div>
+
+    <script>
+        function validateKey(key) {
+            const invalidKeyPattern = /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~ ]+$/;
+            return key.length > 0 && invalidKeyPattern.test(key);
+        }
+
+        function zetsubouEncrypt(text, key) {
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                const charCode = text.charCodeAt(i);
+                const keyCharCode = key.charCodeAt(i % key.length);
+                result += String.fromCharCode(charCode + keyCharCode);
+            }
+            return btoa(result);
+        }
+
+        function zetsubouDecrypt(text, key) {
+            let decoded = atob(text);
+            let result = '';
+            for (let i = 0; i < decoded.length; i++) {
+                const charCode = decoded.charCodeAt(i);
+                const keyCharCode = key.charCodeAt(i % key.length);
+                result += String.fromCharCode(charCode - keyCharCode);
+            }
+            return result;
+        }
+
+        function encryptText() {
+            const input = document.getElementById('encrypt-input').value;
+            const key = document.getElementById('encrypt-key').value;
+            const errorElement = document.getElementById('encrypt-error');
+
+            if (!input || !key) {
+                errorElement.textContent = 'Please provide both text and key for encryption.';
+                return;
+            }
+
+            if (!validateKey(key)) {
+                errorElement.textContent = 'Invalid key. Use only valid characters (letters, numbers, and symbols).';
+                return;
+            }
+
+            errorElement.textContent = '';
+            const encrypted = zetsubouEncrypt(input, key);
+            document.getElementById('encrypt-result').value = encrypted;
+        }
+
+        function decryptText() {
+            const input = document.getElementById('decrypt-input').value;
+            const key = document.getElementById('decrypt-key').value;
+            const errorElement = document.getElementById('decrypt-error');
+
+            if (!input || !key) {
+                errorElement.textContent = 'Please provide both text and key for decryption.';
+                return;
+            }
+
+            if (!validateKey(key)) {
+                errorElement.textContent = 'Invalid key. Use only valid characters (letters, numbers, and symbols).';
+                return;
+            }
+
+            try {
+                errorElement.textContent = '';
+                const decrypted = zetsubouDecrypt(input, key);
+                document.getElementById('decrypt-result').value = decrypted;
+            } catch (error) {
+                errorElement.textContent = 'Decryption failed. Please ensure the input and key are correct.';
+            }
+        }
+    </script>
+</body>
+</html>
