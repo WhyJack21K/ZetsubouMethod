@@ -1,66 +1,74 @@
 # Zetsubou Method
 
-Aplikasi web sederhana untuk mengenkripsi dan mendekripsi teks menggunakan sebuah kunci. Seluruh antarmuka dan logika saat ini berada dalam satu file HTML.
-
-> **Catatan keamanan:** proyek ini dibuat sebagai demonstrasi/eksperimen. Metodenya bukan kriptografi yang aman. Jangan gunakan untuk melindungi kata sandi, data pribadi, atau informasi rahasia.
+Aplikasi web sederhana untuk mengenkripsi dan mendekripsi teks langsung di browser. Antarmukanya menggunakan HTML dan CSS biasa, sedangkan seluruh logika aplikasi berada di JavaScript tanpa dependensi tambahan.
 
 ## Fitur
 
-- Mengenkripsi teks dengan kunci yang dimasukkan pengguna.
-- Mendekripsi hasil dengan kunci yang sama.
-- Menyalin hasil enkripsi dan menempelkan teks dari clipboard.
-- Menampilkan pesan jika input atau kunci tidak valid.
-
-## Cara kerja
-
-1. Setiap kode karakter teks dijumlahkan dengan kode karakter kunci yang diulang sepanjang teks.
-2. Hasilnya dikodekan ke Base64 untuk ditampilkan.
-3. Proses dekripsi membalikkan Base64 lalu mengurangi kode karakter kunci dari tiap karakter.
-
-Base64 hanya format encoding, bukan enkripsi. Algoritma geser karakter di proyek ini juga tidak dirancang untuk keamanan.
+- Enkripsi dan dekripsi teks dengan AES-256-GCM melalui Web Crypto API.
+- Frasa sandi diubah menjadi kunci dengan PBKDF2-HMAC-SHA-256 sebanyak 600.000 iterasi.
+- Salt acak 16 byte dan initialization vector (IV) acak 12 byte dibuat untuk setiap enkripsi.
+- Mendukung teks Unicode, termasuk emoji.
+- Hasil enkripsi versi lama dapat dibuka untuk membantu memindahkan data ke format baru.
+- Tombol salin/tempel clipboard dan tampilan yang menyesuaikan layar kecil.
 
 ## Menjalankan aplikasi
 
-Tidak ada proses build atau dependensi yang perlu dipasang. Clone repositori, lalu buka `index.html` di browser modern:
+Tidak ada proses build atau dependensi yang perlu dipasang. Web Crypto memerlukan konteks aman, jadi jalankan aplikasi melalui HTTPS atau server lokal. Contoh dengan Python:
 
 ```bash
 git clone https://github.com/WhyJack21K/ZetsubouMethod.git
 cd ZetsubouMethod
-```
-
-Untuk memakai tombol clipboard, jalankan server lokal dari folder proyek karena akses clipboard bergantung pada izin dan konteks aman browser:
-
-```bash
 python -m http.server 8000
 ```
 
-Buka <http://localhost:8000>.
+Buka <http://localhost:8000> di browser modern.
 
 ## Cara menggunakan
 
 ### Enkripsi
 
-1. Masukkan teks pada bagian **Encrypt Section**.
-2. Masukkan kunci yang berisi huruf, angka, atau simbol ASCII.
-3. Pilih **Encrypt**.
-4. Salin hasilnya dengan tombol **Copy**.
+1. Tulis atau tempel teks yang ingin dienkripsi.
+2. Masukkan frasa sandi minimal 12 karakter. Gunakan frasa yang panjang dan unik.
+3. Pilih **Enkripsi teks**, lalu salin dan simpan hasilnya.
 
 ### Dekripsi
 
-1. Tempelkan hasil enkripsi pada bagian **Decrypt Section**.
-2. Masukkan kunci yang sama seperti saat enkripsi.
-3. Pilih **Decrypt** untuk melihat teks asal.
+1. Tempel hasil enkripsi pada bagian **Dekripsi**.
+2. Masukkan frasa sandi yang sama.
+3. Pilih **Dekripsi teks**.
 
-## Batasan
+Frasa sandi tidak disimpan atau dikirim oleh aplikasi. Jika frasa sandi hilang, teks tidak dapat dipulihkan.
 
-- Kunci harus berisi setidaknya satu karakter. Karakter kunci yang diterima adalah huruf Latin, angka, simbol ASCII, dan spasi.
-- Konversi memakai fungsi browser `btoa()`/`atob()`. Nilai kode karakter hasil proses yang berada di luar rentang byte dapat menyebabkan enkripsi gagal; teks Unicode seperti emoji juga tidak didukung dengan andal.
-- Kunci yang salah dapat menghasilkan teks yang tidak terbaca.
-- Dukungan clipboard bergantung pada izin browser. Jika tombol clipboard gagal saat membuka file langsung, gunakan server lokal seperti langkah di atas.
+## Format enkripsi baru
+
+Hasil baru diawali dengan `ZSM1.` dan disusun sebagai berikut:
+
+```text
+ZSM1.<salt-base64url>.<iv-base64url>.<ciphertext-dan-tag-base64url>
+```
+
+Versi format `ZSM1` menetapkan PBKDF2-HMAC-SHA-256 dengan 600.000 iterasi dan AES-256-GCM. Header versi ikut diautentikasi bersama ciphertext. AES-GCM mendeteksi perubahan data dan frasa sandi yang salah. Aplikasi membuat salt 16 byte dan IV 12 byte acak untuk setiap enkripsi.
+
+## Dukungan format lama
+
+Teks Base64 dari versi awal dapat dimasukkan langsung ke bagian dekripsi dengan kunci lama. Aplikasi akan menampilkan peringatan setelah membuka hasil tersebut. Algoritma lama hanya menggeser kode karakter, tanpa autentikasi; teks yang berubah atau kunci yang salah dapat menghasilkan keluaran yang tampak seperti teks biasa.
+
+Setelah membuka teks lama, salin hasil dekripsi lalu enkripsi kembali memakai format baru. Hindari memakai metode lama untuk membuat pesan baru.
+
+## Catatan keamanan
+
+- Aplikasi memproses teks dan frasa sandi di browser; tidak ada backend atau layanan pihak ketiga di dalam proyek ini.
+- Gunakan frasa sandi yang panjang dan unik. Jumlah iterasi KDF tidak dapat menggantikan frasa sandi yang mudah ditebak.
+- Siapa pun yang memperoleh ciphertext tetap dapat mencoba menebak frasa sandinya secara offline.
+- Simpan frasa sandi dan ciphertext di tempat yang aman. Aplikasi tidak memiliki fitur pemulihan.
+- Proyek ini merupakan alat belajar dan belum menjalani audit keamanan independen. Jangan jadikan satu-satunya perlindungan untuk data yang sangat penting.
 
 ## Struktur proyek
 
 ```text
 ZetsubouMethod/
-└── index.html    # Antarmuka, CSS, dan logika enkripsi/dekripsi
+├── index.html   # Struktur halaman dan form
+├── styles.css   # Tampilan dan layout responsif
+├── app.js       # Validasi input, kriptografi, dan clipboard
+└── README.md    # Dokumentasi proyek
 ```

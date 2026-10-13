@@ -1,182 +1,164 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Enkripsi dan dekripsi teks secara lokal dengan AES-GCM."
+    />
     <title>Zetsubou Method</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            padding: 20px;
-            background: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background: #007BFF;
-            color: white;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        .error {
-            color: red;
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="page-header">
+        <p class="eyebrow">Alat enkripsi teks</p>
         <h1>Zetsubou Method</h1>
+        <p class="intro">
+          Enkripsi teks di browser dengan AES-GCM. Teks dan frasa sandi diproses
+          di perangkat ini dan tidak dikirim ke server.
+        </p>
+      </header>
 
-        <div class="section" id="encrypt-section">
-            <h2>Encrypt Section</h2>
-            <label for="encrypt-input">Input Text:</label>
-            <textarea id="encrypt-input" rows="3"></textarea>
+      <p id="browser-warning" class="notice notice-warning" hidden>
+        Browser ini perlu dibuka melalui HTTPS atau <code>localhost</code> agar
+        Web Crypto dapat digunakan.
+      </p>
 
-            <label for="encrypt-key">Key:</label>
-            <input type="text" id="encrypt-key">
+      <div class="tool-grid">
+        <section class="panel" aria-labelledby="encrypt-heading">
+          <div class="panel-heading">
+            <span class="step-number" aria-hidden="true">01</span>
+            <div>
+              <h2 id="encrypt-heading">Enkripsi</h2>
+              <p>Buat teks terenkripsi dengan frasa sandi.</p>
+            </div>
+          </div>
 
-            <button onclick="encryptText()">Encrypt</button>
+          <form id="encrypt-form" class="tool-form">
+            <label for="plain-text">Teks yang ingin dienkripsi</label>
+            <textarea
+              id="plain-text"
+              name="plainText"
+              rows="5"
+              placeholder="Tulis atau tempel teks di sini"
+              required
+            ></textarea>
 
-            <label for="encrypt-result">Result:</label>
-            <textarea id="encrypt-result" rows="3" readonly></textarea>
-            <button onclick="copyEncryptResult()">Copy</button>
-            <p id="encrypt-error" class="error"></p>
-        </div>
+            <label for="encrypt-passphrase">Frasa sandi</label>
+            <input
+              id="encrypt-passphrase"
+              name="passphrase"
+              type="password"
+              autocomplete="new-password"
+              minlength="12"
+              aria-describedby="encrypt-passphrase-hint"
+              placeholder="Gunakan 12 karakter atau lebih"
+              required
+            />
+            <p id="encrypt-passphrase-hint" class="field-hint">
+              Pilih frasa sandi panjang dan unik. Minimal 12 karakter.
+            </p>
 
-        <div class="section" id="decrypt-section">
-            <h2>Decrypt Section</h2>
-            <label for="decrypt-input">Input Text:</label>
-            <textarea id="decrypt-input" rows="3"></textarea>
-            <button onclick="pasteDecryptInput()">Paste</button>
+            <button class="button button-primary" type="submit">
+              Enkripsi teks
+            </button>
+          </form>
 
-            <label for="decrypt-key">Key:</label>
-            <input type="text" id="decrypt-key">
+          <div class="result-block">
+            <label for="encrypted-text">Hasil enkripsi</label>
+            <textarea
+              id="encrypted-text"
+              name="encryptedText"
+              rows="5"
+              placeholder="Hasil akan muncul di sini"
+              readonly
+              spellcheck="false"
+            ></textarea>
+            <button
+              id="copy-button"
+              class="button button-secondary"
+              type="button"
+              disabled
+            >
+              Salin hasil
+            </button>
+          </div>
+          <p id="encrypt-status" class="status" role="status" aria-live="polite"></p>
+        </section>
 
-            <button onclick="decryptText()">Decrypt</button>
+        <section class="panel" aria-labelledby="decrypt-heading">
+          <div class="panel-heading">
+            <span class="step-number" aria-hidden="true">02</span>
+            <div>
+              <h2 id="decrypt-heading">Dekripsi</h2>
+              <p>Buka teks dengan frasa sandi yang sama.</p>
+            </div>
+          </div>
 
-            <label for="decrypt-result">Result:</label>
-            <textarea id="decrypt-result" rows="3" readonly></textarea>
-            <p id="decrypt-error" class="error"></p>
-        </div>
-    </div>
+          <form id="decrypt-form" class="tool-form">
+            <label for="encrypted-input">Teks terenkripsi</label>
+            <textarea
+              id="encrypted-input"
+              name="encryptedInput"
+              rows="5"
+              placeholder="Tempel hasil enkripsi di sini"
+              required
+              spellcheck="false"
+            ></textarea>
+            <button
+              id="paste-button"
+              class="button button-secondary button-inline"
+              type="button"
+            >
+              Tempel dari clipboard
+            </button>
 
-    <script>
-        function validateKey(key) {
-            const invalidKeyPattern = /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~ ]+$/;
-            return key.length > 0 && invalidKeyPattern.test(key);
-        }
+            <label for="decrypt-passphrase">Frasa sandi</label>
+            <input
+              id="decrypt-passphrase"
+              name="passphrase"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Masukkan frasa sandi"
+              required
+            />
 
-        function zetsubouEncrypt(text, key) {
-            let result = '';
-            for (let i = 0; i < text.length; i++) {
-                const charCode = text.charCodeAt(i);
-                const keyCharCode = key.charCodeAt(i % key.length);
-                result += String.fromCharCode(charCode + keyCharCode);
-            }
-            return btoa(result);
-        }
+            <button class="button button-primary" type="submit">
+              Dekripsi teks
+            </button>
+          </form>
 
-        function zetsubouDecrypt(text, key) {
-            let decoded = atob(text);
-            let result = '';
-            for (let i = 0; i < decoded.length; i++) {
-                const charCode = decoded.charCodeAt(i);
-                const keyCharCode = key.charCodeAt(i % key.length);
-                result += String.fromCharCode(charCode - keyCharCode);
-            }
-            return result;
-        }
+          <div class="result-block">
+            <label for="plain-result">Teks hasil dekripsi</label>
+            <textarea
+              id="plain-result"
+              name="plainResult"
+              rows="5"
+              placeholder="Teks hasil dekripsi akan muncul di sini"
+              readonly
+            ></textarea>
+          </div>
+          <p id="decrypt-status" class="status" role="status" aria-live="polite"></p>
+        </section>
+      </div>
 
-        function encryptText() {
-            const input = document.getElementById('encrypt-input').value;
-            const key = document.getElementById('encrypt-key').value;
-            const errorElement = document.getElementById('encrypt-error');
+      <aside class="notice notice-info" aria-label="Informasi keamanan">
+        <h2>Catatan keamanan</h2>
+        <p>
+          Hasil baru memakai AES-256-GCM dan formatnya diawali <code>ZSM1.</code>.
+          Simpan frasa sandi dengan aman; frasa sandi yang hilang tidak dapat
+          dipulihkan. Hasil Base64 dari versi lama tetap bisa dibuka, tetapi
+          format lama tidak memiliki pemeriksaan keaslian dan hanya cocok untuk
+          memindahkan data ke format baru.
+        </p>
+      </aside>
 
-            if (!input || !key) {
-                errorElement.textContent = 'Please provide both text and key for encryption.';
-                return;
-            }
-
-            if (!validateKey(key)) {
-                errorElement.textContent = 'Invalid key. Use only valid characters (letters, numbers, and symbols).';
-                return;
-            }
-
-            errorElement.textContent = '';
-            const encrypted = zetsubouEncrypt(input, key);
-            document.getElementById('encrypt-result').value = encrypted;
-        }
-
-        function decryptText() {
-            const input = document.getElementById('decrypt-input').value;
-            const key = document.getElementById('decrypt-key').value;
-            const errorElement = document.getElementById('decrypt-error');
-
-            if (!input || !key) {
-                errorElement.textContent = 'Please provide both text and key for decryption.';
-                return;
-            }
-
-            if (!validateKey(key)) {
-                errorElement.textContent = 'Invalid key. Use only valid characters (letters, numbers, and symbols).';
-                return;
-            }
-
-            try {
-                errorElement.textContent = '';
-                const decrypted = zetsubouDecrypt(input, key);
-                document.getElementById('decrypt-result').value = decrypted;
-            } catch (error) {
-                errorElement.textContent = 'Decryption failed. Please ensure the input and key are correct.';
-            }
-        }
-
-        function copyEncryptResult() {
-            const result = document.getElementById('encrypt-result');
-            result.select();
-            result.setSelectionRange(0, 99999); // For mobile devices
-            navigator.clipboard.writeText(result.value)
-                .then(() => alert('Result copied to clipboard!'))
-                .catch(err => alert('Failed to copy result.'));
-        }
-
-        function pasteDecryptInput() {
-            navigator.clipboard.readText()
-                .then(text => {
-                    document.getElementById('decrypt-input').value = text;
-                })
-                .catch(err => alert('Failed to paste text.')); 
-        }
-    </script>
-</body>
+      <footer class="page-footer">
+        <p>Jangan gunakan alat ini sebagai satu-satunya tempat menyimpan data penting.</p>
+      </footer>
+    </main>
+  </body>
 </html>
