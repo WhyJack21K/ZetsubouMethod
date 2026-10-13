@@ -281,11 +281,6 @@ input::placeholder {
   color: var(--color-ink);
 }
 
-.notice-info {
-  border-color: #dedafc;
-  background: #f8f7ff;
-}
-
 .notice-warning {
   border-color: #f0d28d;
   background: #fff9e8;
